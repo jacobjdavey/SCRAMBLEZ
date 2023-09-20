@@ -20,6 +20,18 @@ app.patch('/score', (req, res) => {
     res.status(200).send(`${score}`);
 })
 
+app.get('/getWord', (req, res) => {
+    res.send('world');
+})
+
+app.patch('/guessWord', (req, res) => {
+    if(req.query.word === 'world') {
+        res.status(200).send('true');
+    } else {
+        res.status(200).send('false');
+    }
+})
+
 app.listen(PORT, () => {
     console.log(`Backend is running on http://localhost:${PORT}`);
 });
