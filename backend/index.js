@@ -117,21 +117,21 @@ app.get('/scrambled_word', async (req, res) => { //get a scrambled word
     }
 });
 
-app.get('/guess', (req,res) =>{ //functionality to take in a guess from the user
+app.patch('/guess', (req, res) =>{ //functionality to take in a guess from the user
     const guess = req.query.guess;
     const unscrambled = req.query.unscrambled;
 
     if (!guess){ //check if guess is empty
-        return (res.status(400).send('Send a valid guess!'));
+        res.status(400).send('Send a valid guess!');
     }
 
     else if(guess === unscrambled){ //guess is right
         numGuesses++;
-        return(res.send(`You win! The correct word was: ${unscrambled}`));
+        res.send(`You win! The correct word was: ${unscrambled}`);
     }
     else{
         numGuesses++;
-        return(res.send('Incorrect guess. Try again.'));
+        res.send('Incorrect guess. Try again.');
     }
 });
 
