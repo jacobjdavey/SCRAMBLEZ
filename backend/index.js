@@ -7,9 +7,9 @@ app.use(cors());
 
 let hints = 0;
 let numGuesses = 0;
-let loops = 0;
 let unscrambledWord = '';
 let scrambledWord = '';
+let score = 0;
 
 function scramble(word){ //function to scramble the word
     let strarray = word.split('');
@@ -105,12 +105,12 @@ app.get('/scrambled_word', async (req, res) => { //get a scrambled word
     try {
         unscrambledWord = await getRandomFormattedWord();
         scrambledWord = scramble(unscrambledWord);
+    
         const info = {
             'scrambledWord': scrambledWord, 
             'unscrambledWord': unscrambledWord
         };
         res.json(info);
-        loops++;
     } catch (error) {
         console.error(error);
         res.status(500).send(`An error occurred: ${error.message}`);
@@ -147,11 +147,8 @@ app.get('/guess/hint', async (req,res) =>{ //functionality to give a hint to the
     }
 });
 
-app.get('/score', (req, res) => {
-    const rawScore = Math.floor(loops/numGuesses);
-    const adjustedScore = rawScore - 2*Math.floor(hints/loops);
-
-    res.send(`Your score is ${adjustedScore}%`); //fix score later
+app.get('/score', (res) => {
+    res.send(`Your score is ${score}%`);
 });
 
 app.patch('/score?', (req, res) => {

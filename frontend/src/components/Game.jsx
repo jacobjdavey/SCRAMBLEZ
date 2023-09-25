@@ -9,6 +9,7 @@ function Game(){
     const [word, setWord] = useState('');
     const [score, setScore] = useState(0);
     const [guess, setGuess] = useState('');
+    const [loops, setLoops] = useState(0);
 
     useEffect(() => {
         let config = {
@@ -26,9 +27,8 @@ function Game(){
             .catch((error) => {
                 console.log(error);
             });
-    }, [score]);
+    }, [loops]);
 
-    console.log(scrambled);
     console.log(word);
 
     const handleChange = (e) => { //called when the input box is changed (onChange)
@@ -47,13 +47,14 @@ function Game(){
         axios.request(config)
             .then((response) => {
                 if(response.data === 'correct'){
-                    setScore(score + 1);
                     notification.success({
                         message: "Correct!",
                         description: `You guessed the word "${word}" correctly!`,
                         placement: "topRight",
                         duration: 2
                     });
+                    changeScore(10); //add 10 to score when right
+                    setLoops(loops+1); //increment the game loop counter
                 } else{
                     notification.error({
                         message: "Incorrect!",
@@ -87,8 +88,25 @@ function Game(){
             });
     };
 
+    const changeScore = (change) => {
+        let config = {
+            method: 'patch',
+            maxBodyLength: Infinity,
+            url: `http://localhost:3000/score?val=${change}`,
+            headers: { }
+          };
+          
+        axios.request(config)
+        .then((response) => {
+            setScore(response.data);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+    }
+
     return( <div className = "card">
-        <h2>Current word: {scrambled}</h2>
+        <h2>Scrambled word: {scrambled}</h2>
         <Input size='large' placeholder='Enter your guess'
             onChange={handleChange} value={guess}/> 
         <br/> <br/>
@@ -96,9 +114,9 @@ function Game(){
 
         <FloatButton.Group shape="square">
             <FloatButton icon={<QuestionCircleOutlined />} type='primary' 
-                tooltip = 'Click for the definition!' onClick={() => giveHint('definition')}/>
+                tooltip = 'Click for the definition!' onClick={() => {giveHint('definition'); changeScore(-1);}}/>
             <FloatButton icon={<BulbOutlined />} type='primary'
-                tooltip = 'Click for a synonym!' onClick ={() => giveHint('synonym')}/>
+                tooltip = 'Click for a synonym!' onClick ={() => {giveHint('synonym'); changeScore(-1);}}/>
         </FloatButton.Group>
 
         <p>Score: {score}</p>
