@@ -19,6 +19,12 @@ Welcome to SCRAMBLEZ! This is a simple word puzzle game where players unscramble
    - Install dependencies.
      ```
      npm install
+     npm run dev
+     ```
+   - Press q or (ctrl + c) to quit. Navigate to front end. Install antdesign and axios.
+     ```
+     cd frontend
+     npm install antd axios
      ```
 
 3. **Starting the Game:**
