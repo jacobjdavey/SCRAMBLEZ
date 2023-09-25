@@ -1,5 +1,3 @@
-// GOAL: BUILD BACKEND BY TONIGHT!!
-
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -46,13 +44,14 @@ async function getRandomFormattedWord() { //return a word without spaces or hyph
         const response = await fetch(url, options);
         const result = await response.json();
         const word = result.word;
-        //check if the word contains spaces or hyphens
-        if (word.includes(' ') || word.includes('-')) {
-            //if the word does contain them, call the function again until it doesn't
-            return getRandomFormattedWord();
+        //validate the word
+        if (word.includes(' ') || word.includes('-') || word.length > 7 || word.length < 4 || !result.results
+                || !result.results[0] || !result.results[0].definition || !result.results[0].synonyms[0]) {
+            return getRandomFormattedWord(); //get a different word until a valid word is called
         }
         unscrambledWord = word;
         return word;
+
     } catch (error) {
         console.error(error);
         throw new error(error.message);
@@ -60,7 +59,7 @@ async function getRandomFormattedWord() { //return a word without spaces or hyph
 }
 
 // Function to get a hint (synonym or definition) for a given word
-async function getHint(unscrambled, hintType) {
+async function getHint(hintType) {
     const options = {
         method: 'GET',
         headers: {
@@ -72,9 +71,9 @@ async function getHint(unscrambled, hintType) {
     try {
         let url;
         if (hintType === 'synonym') {
-            url = `https://wordsapiv1.p.rapidapi.com/words/${unscrambled}/synonyms`;
+            url = `https://wordsapiv1.p.rapidapi.com/words/${unscrambledWord}/synonyms`;
         } else if (hintType === 'definition') {
-            url = `https://wordsapiv1.p.rapidapi.com/words/${unscrambled}/definitions`;
+            url = `https://wordsapiv1.p.rapidapi.com/words/${unscrambledWord}/definitions`;
         }
 
         const response = await fetch(url, options);
@@ -83,16 +82,16 @@ async function getHint(unscrambled, hintType) {
         if (hintType === 'synonym') {
             const synonyms = result.synonyms;
             const synonym = synonyms[Math.floor(Math.random() * synonyms.length)];
-            if(synonym.includes(unscrambled)){
-                return getHint(unscrambled, hintType);
+            if(synonym.includes(unscrambledWord)){
+                return getHint(unscrambledWord, hintType);
             }
             return synonym;
         } else if (hintType === 'definition') {
             const definitions = result.definitions;
             const definition = definitions[Math.floor(Math.random() * definitions.length)].
                                 definition;
-            if(definition.includes(unscrambled)){
-                return getHint(unscrambled, hintType);
+            if(definition.includes(unscrambledWord)){
+                return getHint(unscrambledWord, hintType);
             }
             return definition;
         }
@@ -136,10 +135,11 @@ app.patch('/guess', (req, res) =>{ //functionality to take in a guess from the u
 
 app.get('/guess/hint', async (req,res) =>{ //functionality to give a hint to the user
     const hintType = req.query.hintType;
+
     try{
-        const hint = await getHint(unscrambledWord, hintType);
+        const hint = await getHint(hintType);
         hints++;
-        return (res.send(`Here is the ${hintType}: ${hint}`));
+        res.send(`Here is the ${hintType}: ${hint}`);
     }
     catch (error){
         console.error(error);
@@ -151,7 +151,7 @@ app.get('/score', (req, res) => {
     const rawScore = Math.floor(loops/numGuesses);
     const adjustedScore = rawScore - 2*Math.floor(hints/loops);
 
-    res.send(`Your score is ${numGuesses}%`); //fix score later
+    res.send(`Your score is ${adjustedScore}%`); //fix score later
 });
 
 app.patch('/score?', (req, res) => {
