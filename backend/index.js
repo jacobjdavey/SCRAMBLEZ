@@ -4,7 +4,7 @@ const app = express();
 const PORT = 3000;
 
 app.use(cors());
-
+//INCORPORATE SESSIONS
 let hints = 0;
 let numGuesses = 0;
 let unscrambledWord = '';
