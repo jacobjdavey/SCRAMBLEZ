@@ -10,6 +10,8 @@ app.use(cors());
 let hints = 0;
 let numGuesses = 0;
 let loops = 0;
+let unscrambledWord = '';
+let scrambledWord = '';
 
 function scramble(word){ //function to scramble the word
     let strarray = word.split('');
@@ -29,7 +31,7 @@ function scramble(word){ //function to scramble the word
 
     return scrambled;
 }
-
+//TODO: ADD A DIFFICULTY LEVEL
 async function getRandomFormattedWord() { //return a word without spaces or hyphens
     const url = 'https://wordsapiv1.p.rapidapi.com/words/?random=true'; //wordsAPI
     const options = {
@@ -49,7 +51,7 @@ async function getRandomFormattedWord() { //return a word without spaces or hyph
             //if the word does contain them, call the function again until it doesn't
             return getRandomFormattedWord();
         }
-        
+        unscrambledWord = word;
         return word;
     } catch (error) {
         console.error(error);
@@ -102,15 +104,14 @@ async function getHint(unscrambled, hintType) {
 
 app.get('/scrambled_word', async (req, res) => { //get a scrambled word
     try {
-        const unscrambled = await getRandomFormattedWord();
-        const scrambled = scramble(unscrambled);
-        res.send(`${unscrambled} ${scrambled}`);
-        const info = { 
-            'unscrambled' : unscrambled,
-            'scrambled' : scrambled
+        unscrambledWord = await getRandomFormattedWord();
+        scrambledWord = scramble(unscrambledWord);
+        const info = {
+            'scrambledWord': scrambledWord, 
+            'unscrambledWord': unscrambledWord
         };
+        res.json(info);
         loops++;
-        return info; //return actual word and unscrambled word
     } catch (error) {
         console.error(error);
         res.status(500).send(`An error occurred: ${error.message}`);
@@ -119,15 +120,13 @@ app.get('/scrambled_word', async (req, res) => { //get a scrambled word
 
 app.patch('/guess', (req, res) =>{ //functionality to take in a guess from the user
     const guess = req.query.guess;
-    const unscrambled = req.query.unscrambled;
-
+    unscrambledWord = req.query.unscrambled;
     if (!guess){ //check if guess is empty
-        res.status(400).send('Send a valid guess!');
+        res.status(400).send('invalid');
     }
-
-    else if(guess === unscrambled){ //guess is right
+    else if(guess === unscrambledWord){ //guess is right
         numGuesses++;
-        res.send(`You win! The correct word was: ${unscrambled}`);
+        res.send('correct');
     }
     else{
         numGuesses++;
@@ -136,10 +135,9 @@ app.patch('/guess', (req, res) =>{ //functionality to take in a guess from the u
 });
 
 app.get('/guess/hint', async (req,res) =>{ //functionality to give a hint to the user
-    const unscrambled = req.query.unscrambled;
     const hintType = req.query.hintType;
     try{
-        const hint = await getHint(unscrambled, hintType);
+        const hint = await getHint(unscrambledWord, hintType);
         hints++;
         return (res.send(`Here is the ${hintType}: ${hint}`));
     }
@@ -153,7 +151,7 @@ app.get('/score', (req, res) => {
     const rawScore = Math.floor(loops/numGuesses);
     const adjustedScore = rawScore - 2*Math.floor(hints/loops);
 
-    res.send(`Your score is ${adjustedScore}%`);
+    res.send(`Your score is ${numGuesses}%`); //fix score later
 });
 
 app.patch('/score?', (req, res) => {
