@@ -22,23 +22,23 @@ Welcome to SCRAMBLEZ! This is a simple word puzzle game where players unscramble
      ```
 
 3. **Starting the Game:**
-   - Run the backend server.
+   - Run the backend server in the terminal. (cd backend)
      ```
      node server.js
      ```
-   - Start the frontend React app.
+   - Start the frontend React app in a new terminal. (cd frontend)
      ```
      npm start
      ```
 
 4. **Playing the Game:**
-   - Open your browser and go to `http://localhost:3000`.
+   - Open your browser and go to the link provided by vite in your frontend terminal.
    - Follow the instructions on the page to start playing the game.
 
 ## How it Works
 
 - The game provides you with a scrambled word, and you need to guess the original word.
-- You can request hints to help you unscramble the word.
+- You can request hints to help you unscramble the word in the bottom right.
 - Keep track of your score and try to beat your high score!
 
 ## Technologies Used
