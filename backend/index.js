@@ -156,6 +156,11 @@ app.patch('/score?', (req, res) => {
     res.status(200).send(`${score}`);
 });
 
+app.patch('/score/reset',(req, res) => {
+    score = 0;
+    res.sendStatus(200);
+})
+
 //TODO: ADD A POST FUNCTION TO DISPLAY SCORE AND GUESSES IN A LIST and OTHER THINGS (results, used words)
 app.listen(PORT, () => {
     console.log(`Backend is running on http://localhost:${PORT}`);

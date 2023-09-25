@@ -10,37 +10,41 @@ function Game(){
     const [score, setScore] = useState(0);
     const [guess, setGuess] = useState('');
     const [loops, setLoops] = useState(0);
+    const [gameState, setGameState] = useState('playing');
 
     useEffect(() => {
-        let config = {
-          method: 'get',
-          maxBodyLength: Infinity,
-          url: 'http://localhost:3000/scrambled_word',
-          headers: { }
-        };
-        
-        axios.request(config)
-            .then((response) => {
-                setScrambled(response.data.scrambledWord);
-                setWord(response.data.unscrambledWord);
-            })
-            .catch((error) => {
-                console.log(error);
-            });
-    }, [loops]);
+            let config = {
+              method: 'get',
+              maxBodyLength: Infinity,
+              url: 'http://localhost:3000/scrambled_word',
+              headers: { }
+            };
+            
+            axios.request(config)
+                .then((response) => {
+                    setScrambled(response.data.scrambledWord);
+                    setWord(response.data.unscrambledWord);
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+        }, [loops, gameState]);
+
+    useEffect(() => {
+        if (loops >= 5) {
+          setGameState('over');
+        }
+      }, [loops]);
 
     console.log(word);
+    console.log(loops);
 
-    const handleChange = (e) => { //called when the input box is changed (onChange)
-        setGuess(e.target.value); //set guess to value input
-    };
-
-
-    const handleSubmit = () => { 
+    const handleSubmit = () => {  //called when submit button is pressed
         let config = {
             method: 'patch',
             maxBodyLength: Infinity,
-            url: `http://localhost:3000/guess?guess=${guess}&unscrambled=${word}`, //guess from input and word from useEffect
+            url: `http://localhost:3000/guess?guess=${guess}&unscrambled=${word}`, //guess from 
+            //input and word from useEffect
             headers: { }
           };
           
@@ -53,8 +57,9 @@ function Game(){
                         placement: "topRight",
                         duration: 2
                     });
-                    changeScore(10); //add 10 to score when right
                     setLoops(loops+1); //increment the game loop counter
+                    changeScore(10); //add 10 to score when right
+                    setWord(''); //reset word
                 } else{
                     notification.error({
                         message: "Incorrect!",
@@ -62,6 +67,7 @@ function Game(){
                         placement: "topRight",
                         duration: 2
                     });
+                    changeScore(-2);
                 }
                 setGuess("");
             })
@@ -71,7 +77,7 @@ function Game(){
         setGuess("");
     };
 
-    const giveHint = (typeofhint) => {
+    const giveHint = (typeofhint) => { //give user a hint
         let config = {
             method: 'get',
             maxBodyLength: Infinity,
@@ -103,24 +109,62 @@ function Game(){
         .catch((error) => {
             console.log(error);
         });
+    };
+
+    const changeGameState = () => {
+        setGameState('playing');
+        setLoops(0);
+        setScore(0);
+
+        let config = {
+            method: 'patch',
+            maxBodyLength: Infinity,
+            url: 'http://localhost:3000/score/reset',
+            headers: { }
+          };
+          
+        axios.request(config)
+        .then((response) => {
+            console.log('Score is reset');
+        })
+        .catch((error) => {
+        console.log(error);
+        });
     }
 
-    return( <div className = "card">
-        <h2>Scrambled word: {scrambled}</h2>
-        <Input size='large' placeholder='Enter your guess'
-            onChange={handleChange} value={guess}/> 
-        <br/> <br/>
-        <Button type='default' size='large' onClick={handleSubmit}>Submit</Button>
+    return( 
 
-        <FloatButton.Group shape="square">
-            <FloatButton icon={<QuestionCircleOutlined />} type='primary' 
-                tooltip = 'Click for the definition!' onClick={() => {giveHint('definition'); changeScore(-1);}}/>
-            <FloatButton icon={<BulbOutlined />} type='primary'
-                tooltip = 'Click for a synonym!' onClick ={() => {giveHint('synonym'); changeScore(-1);}}/>
-        </FloatButton.Group>
+        <div className = "card">
+            {gameState === 'playing' && (
+                <>
+                <h2>Scrambled word: {scrambled}</h2>
+                    <Input size='large' placeholder='Enter your guess'
+                        onChange={(e) => setGuess(e.target.value)} value={guess}/> 
+                    <br/> <br/>
+                    <Button type='default' size='large' onClick={handleSubmit}>Submit</Button>
 
-        <p>Score: {score}</p>
-    </div>
+                    <FloatButton.Group shape="square">
+                        <FloatButton icon={<QuestionCircleOutlined />} type='primary' 
+                            tooltip = 'Click for the definition!' onClick={() => 
+                                {giveHint('definition'); }}/>
+                        <FloatButton icon={<BulbOutlined />} type='primary'
+                            tooltip = 'Click for a synonym!' onClick ={() => 
+                                {giveHint('synonym'); }}/>
+                    </FloatButton.Group>
+                <p>Score: {score}</p>
+                </>
+            )}
+
+            {gameState === 'over' && (
+                <div>
+                    <h1>GAME OVER</h1>
+                    <h2>Your final score is ... {score} out of a possible {loops*10}</h2>
+                    <br/> <br/>
+                    <Button type='default' size='large' shape = 'circle' onClick={changeGameState}>Play again!</Button>
+                </div>
+            )}
+            
+        </div>
     )
 }
 
