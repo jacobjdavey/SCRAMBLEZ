@@ -1,5 +1,5 @@
 function Title(){
-    return <h1>EKREB</h1>
+    return <h1>SCRAMBLEZ</h1>
 }
 
 export default Title;
